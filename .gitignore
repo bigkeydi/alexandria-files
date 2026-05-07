@@ -1,0 +1,27 @@
+# Local secrets — copy from .env.example and fill in
+.env
+.env.local
+.env.*.local
+
+# Stack runtime data (bind mounts — do not commit)
+petio/
+mongo/
+prowlarr/
+overseerr/
+heimdall/
+srv/
+radarr-4k/
+sonarr/
+homarr/
+Plex-Image-Cleanup/
+
+# One-off imports from D:\Docker root (not part of compose paths)
+_docker-root-residual/
+
+# Optional local Mongo dumps (mongodump)
+mongo-backups/
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
