@@ -8,6 +8,8 @@ volumes:
             type: cifs
             o: "${CIFS_MOUNT_OPTS}"
             device: "${CIFS_DEVICE}"
+    bazarr-db:
+    radarr-config:
 
 services:
   petio:
@@ -50,16 +52,23 @@ services:
       - ./prowlarr/config:/config
     restart: unless-stopped
 
-  overseerr:
-    image: sctx/overseerr:latest
-    container_name: "overseerr"
+  seerr:
+    image: ghcr.io/seerr-team/seerr:latest
+    init: true
+    container_name: seerr
     environment:
       - LOG_LEVEL=debug
       - TZ=${GLOBAL_TZ}
     ports:
       - "5055:5055"
     volumes:
-      - ./overseerr/config:/app/config
+      - ./seerr/config:/app/config
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/settings/public || exit 1
+      start_period: 20s
+      timeout: 3s
+      interval: 15s
+      retries: 3
     restart: unless-stopped
 
   heimdall:
@@ -107,6 +116,26 @@ services:
     volumes:
       - ./srv/config/nginxproxymanager/db:/var/lib/mysql
 
+  radarr:
+    container_name: radarr
+    image: lscr.io/linuxserver/radarr:latest
+    environment:
+      - PUID=${RADARR_PUID}
+      - PGID=${RADARR_PGID}
+      - TZ=${GLOBAL_TZ}
+    volumes:
+      - radarr-config:/config
+      # MediaCover kept on host to avoid slow Docker Desktop chown; restore bind after startup if needed:
+      # - ./radarr/MediaCover.tmp:/config/MediaCover
+      - D:\:/ddrive
+      - G:\:/gdrive
+      - E:\:/edrive
+      # F:\:/fdrive  # temporarily disabled: Docker Desktop F: mount error
+      - shared_folder_09:/plexandria
+    ports:
+      - "7878:7878"
+    restart: unless-stopped
+
   radarr-4k:
     container_name: radarr-4k
     image: lscr.io/linuxserver/radarr:latest
@@ -137,6 +166,26 @@ services:
       - shared_folder_09:/plexandria       # nas drive
       - G:\TV Series:/gdrive
       - E:\Television:/edrive
+    restart: unless-stopped
+
+  bazarr:
+    container_name: bazarr
+    image: lscr.io/linuxserver/bazarr:latest
+    environment:
+      - PUID=${BAZARR_PUID}
+      - PGID=${BAZARR_PGID}
+      - TZ=${GLOBAL_TZ}
+    volumes:
+      - ./bazarr/config:/config
+      - bazarr-db:/config/db
+      - D:\:/ddrive
+      - G:\:/gdrive
+      - E:\:/edrive
+      - G:\TV Series:/sonarr_gdrive
+      - E:\Television:/sonarr_edrive
+      - shared_folder_09:/plexandria
+    ports:
+      - "6767:6767"
     restart: unless-stopped
 
   watchtower:

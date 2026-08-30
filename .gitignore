@@ -8,9 +8,12 @@ petio/
 mongo/
 prowlarr/
 overseerr/
+seerr/
 heimdall/
 srv/
 radarr-4k/
+radarr/
+bazarr/
 sonarr/
 homarr/
 Plex-Image-Cleanup/
